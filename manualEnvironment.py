@@ -232,7 +232,7 @@ def main():
             ])
             
             # Führe Step aus
-            obs, reward, done, dist_gripper, dist_target = env.step(current_angles)
+            obs, reward, done, dist_gripper, dist_target, _object_pos = env.step(current_angles)
             
             # Logge Step
             logger.log_step(step_count, current_angles, reward, dist_gripper, dist_target, done)

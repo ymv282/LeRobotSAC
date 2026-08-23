@@ -3,10 +3,10 @@ import mujoco.viewer
 import os
 import numpy as np
 import time
-model_path = os.path.expanduser("~/SO-ARM100/Simulation/SO101/scene.xml")
+model_path = os.path.expanduser("~/LeRobot/SRC/SO-ARM100/Simulation/SO101/scene.xml")
 model = mujoco.MjModel.from_xml_path(model_path)
 data = mujoco.MjData(model)
-mujoco.viewer.launch(model, data)
+
 for j in range(model.njnt):
     name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, j)
 
@@ -41,7 +41,10 @@ def get_gripper_position():
         )
         # Endeffektor Position
         return data.xpos[gripper_id].copy()
-for i in range(1,10):
-    for _ in range(10):
+with mujoco.viewer.launch_passive(model, data) as viewer:
+    for i in range(1, 10):
+        for _ in range(10):
             mujoco.mj_step(model, data)
-    print(f'Gripper Position: {get_gripper_position()}')
+        viewer.sync()
+        print(f'Gripper Position: {get_gripper_position()}')
+        time.sleep(0.05)

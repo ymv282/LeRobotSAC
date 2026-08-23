@@ -44,15 +44,20 @@ class SO101SimulationEnv:
         # MuJoCo Viewer starten (optional)
         if enable_viewer:
             self._start_viewer()
-        try:
-            self.camera_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_CAMERA, camera_name
-            )
+        # mj_name2id wirft KEINE Exception bei fehlendem Namen, sondern gibt -1
+        # zurück. Das ursprüngliche try/except griff daher nie; self.camera_id
+        # wird jetzt immer gesetzt und explizit auf -1 geprüft.
+        self.camera_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_CAMERA, camera_name
+        )
+        if self.camera_id == -1:
+            print(f"Keine Kamera '{camera_name}' gefunden")
+        else:
             print(f"\nVerwende Kamera: '{camera_name}' (ID: {self.camera_id})")
-        except:
-            print("Keine Kamera gefunden")
     def get_camera_image(self):
         """Holt RGB Kamerabild"""
+        if self.camera_id == -1:
+            raise RuntimeError(f"Keine gültige Kamera '{self.camera_name}' im Modell gefunden")
         self.renderer.update_scene(self.data, camera=self.camera_id)
         rgb = self.renderer.render()
         rgb_small = cv2.resize(rgb, self.img_size)
@@ -60,18 +65,22 @@ class SO101SimulationEnv:
     
     def get_gif_img(self):
         "Img fürs rendern des Gifs"
+        if self.camera_id == -1:
+            raise RuntimeError(f"Keine gültige Kamera '{self.camera_name}' im Modell gefunden")
         self.renderer.update_scene(self.data, camera=self.camera_id)
         rgb = self.renderer.render()
         rgb_large = cv2.resize(rgb, self.log_img_size)
         return rgb_large
     def save_img(self):
         "Img fürs Rendern des Gifs und direkt im Log-Ordner speichern"
+        if self.camera_id == -1:
+            raise RuntimeError(f"Keine gültige Kamera '{self.camera_name}' im Modell gefunden")
         self.renderer.update_scene(self.data, camera=self.camera_id)
         rgb = self.renderer.render()
         rgb_large = cv2.resize(rgb, self.log_img_size)
 
         os.makedirs(self.log_dir, exist_ok=True)
-        filename = 'Testpic.png'#os.path.join(self.log_dir, f"frame_{self.step():06d}.png")
+        filename = os.path.join(self.log_dir, "Testpic.png")
         cv2.imwrite(filename, cv2.cvtColor(rgb_large, cv2.COLOR_RGB2BGR))
 
         return rgb_large
@@ -79,12 +88,18 @@ class SO101SimulationEnv:
     def _start_viewer(self):
         """Startet MuJoCo Viewer in separatem Thread"""
         def viewer_loop():
+            # WICHTIG: Hier wird NICHT mehr mj_step() aufgerufen.
+            # step() und move_joints() stepen die Physik bereits im Hauptthread.
+            # Würde der Viewer-Thread parallel ebenfalls mj_step() aufrufen,
+            # griffen zwei Threads unsynchronisiert auf dasselbe data-Objekt zu
+            # (Race Condition / undefined behavior). Der Viewer-Thread übernimmt
+            # nur noch das Rendering/Sync mit fester Framerate.
             with mujoco.viewer.launch_passive(self.model, self.data) as viewer:
                 self.viewer = viewer
                 print("MuJoCo Viewer gestartet")
                 while viewer.is_running():
-                    mujoco.mj_step(self.model, self.data)
                     viewer.sync()
+                    time.sleep(1 / 60)
         
         self.viewer_thread = threading.Thread(target=viewer_loop, daemon=True)
         self.viewer_thread.start()
@@ -101,7 +116,11 @@ class SO101SimulationEnv:
         - Vorwärtskinematik aktualisieren
         - Kamera-Observation zurückgeben
         """
-        self.data = mujoco.MjData(self.model)
+        # In-place Reset statt self.data = mujoco.MjData(self.model):
+        # Ein bereits gestarteter Viewer (mujoco.viewer.launch_passive) ist an
+        # das konkrete data-Objekt gebunden. Würde hier ein neues MjData
+        # erzeugt, würde der Viewer weiterhin den alten Zustand anzeigen.
+        mujoco.mj_resetData(self.model, self.data)
 
         # ----- Arm-Joints randomisieren -----
         

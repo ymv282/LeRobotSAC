@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import time
 from so101_env import SO101SimulationEnv
-from networks_old import ActorCritic
+from networks import ActorCritic
 
 def test_trained_model(
     model_path="models/actor_critic_best.pth",
@@ -111,7 +111,7 @@ def test_trained_model(
             print(f"  Cube:    {cube_pos}")
             print(f"  Target:  {target_pos}")
             
-            reward, done, dist_gripper, dist_target = env.compute_reward()
+            reward, done, dist_gripper, dist_target, _object_pos = env.compute_reward()
             print(f"  Initial Reward: {reward:.4f}")
             print(f"  Distance Gripper→Object: {dist_gripper:.4f} m")
             print(f"  Distance Object→Target:  {dist_target:.4f} m")
@@ -135,7 +135,7 @@ def test_trained_model(
                 action_bound = joint_center + action * joint_range
                 
                 # Step in Environment
-                next_obs, reward, done, dist_gripper, dist_target = env.step(action_bound)
+                next_obs, reward, done, dist_gripper, dist_target, _object_pos = env.step(action_bound)
                 next_obs_norm = next_obs.transpose(2, 0, 1) / 255.0
                 
                 ep_reward += reward
