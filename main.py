@@ -184,7 +184,7 @@ def SAC(
                 frames.append(env.get_gif_img())
             
                 
-            if save_img and global_step == 1:
+            if global_step ==1:
                 env.save_img()
 
             if done:                    
@@ -198,7 +198,6 @@ def SAC(
 
 
         episode_rewards.append(ep_reward)
-        avg_reward = np.mean(episode_rewards[-50:])
         if ep % 10 == 0:
             avg_step_reward = ep_reward / step  # Durchschnitt pro Step
             avg_50_reward = np.mean(episode_rewards[-50:])
@@ -227,13 +226,16 @@ def SAC(
                 )
             except: 
                 print("Print failed")
-            if len(episode_rewards) >= 50 and actor_scheduler != "Static":
+            if len(episode_rewards) >= 50 and scheduler != "Static":
                 actor_scheduler.step(avg_reward)
                 critic_scheduler.step(avg_reward)
                 current_actor_lr = actor_optim.param_groups[0]['lr']
                 current_critic_lr = critic_optim.param_groups[0]['lr']
                 print(f"LR - Actor: {current_actor_lr:.2e}, Critic: {current_critic_lr:.2e}|\n")
                                 
+        
+            
+        avg_reward = np.mean(episode_rewards[-50:])
 
         if avg_reward > best_avg:
             best_avg = avg_reward
@@ -277,7 +279,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_dir", type=str, default="logs")
     parser.add_argument("--enable_viewer", action="store_true", default=False)
     parser.add_argument("--no_ml", action="store_true", default=False)
-    parser.add_argument("--scheduler", type=str, default="none",
+    parser.add_argument("--scheduler", type=str, default="reduceOnPlateau",
                          choices=["none", "reduceOnPlateau", "cosineAnnealing", "stepLR"])
     args = parser.parse_args()
 
@@ -299,4 +301,4 @@ if __name__ == "__main__":
     plt.xlabel("Episodes")
     plt.ylabel("Episode Reward")
     plt.grid()
-    plt.savefig(os.path.join(args.save_dir, "training_rewards.png"))
+    plt.savefig("/home/elia/LeRobot/SRC/logs")

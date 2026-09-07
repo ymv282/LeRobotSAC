@@ -20,7 +20,7 @@ class SO101SimulationEnv:
             "wrist_roll",
             "gripper",
         ]
-    def __init__(self, model_path=os.path.expanduser("~/LeRobot/SRC/SO-ARM100/Simulation/SO101/scene.xml"), camera_name="rgbd_camera", 
+    def __init__(self, model_path=os.path.expanduser("D:\LeRobotSAC\SO-ARM100-main\Simulation\SO101\scene.xml"), camera_name="rgbd_camera", 
                  img_size=(84, 84), log_img_size=(512, 512), enable_viewer=False):
         self.img_size = img_size
         self.camera_name = camera_name

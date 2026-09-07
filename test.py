@@ -111,10 +111,10 @@ def test_trained_model(
             print(f"  Cube:    {cube_pos}")
             print(f"  Target:  {target_pos}")
             
-            reward, done, dist_gripper, dist_target, _object_pos = env.compute_reward()
+            reward, done, distGripper, distTarget, objectPos = env.compute_reward()
             print(f"  Initial Reward: {reward:.4f}")
-            print(f"  Distance Gripper→Object: {dist_gripper:.4f} m")
-            print(f"  Distance Object→Target:  {dist_target:.4f} m")
+            print(f"  Distance Gripper→Object: {distGripper:.4f} m")
+            print(f"  Distance Object→Target:  {distTarget:.4f} m")
             print()
             
             ep_reward = 0.0
@@ -135,7 +135,7 @@ def test_trained_model(
                 action_bound = joint_center + action * joint_range
                 
                 # Step in Environment
-                next_obs, reward, done, dist_gripper, dist_target, _object_pos = env.step(action_bound)
+                next_obs, reward, done, distGripper, distTarget, objectPos = env.step(action_bound)
                 next_obs_norm = next_obs.transpose(2, 0, 1) / 255.0
                 
                 ep_reward += reward
@@ -146,8 +146,8 @@ def test_trained_model(
                     print(f"[Step {step:3d}] "
                           f"Reward: {reward:+.3f} | "
                           f"Total: {ep_reward:+.2f} | "
-                          f"Dist G→O: {dist_gripper:.3f} | "
-                          f"Dist O→T: {dist_target:.3f}")
+                          f"Dist G→O: {distGripper:.3f} | "
+                          f"Dist O→T: {distTarget:.3f}")
                 
                 # Langsamer für Beobachtung
                 time.sleep(0.02)
@@ -162,7 +162,7 @@ def test_trained_model(
             print(f"  Total Reward: {ep_reward:.2f}")
             print(f"  Steps: {step}")
             print(f"  Success: {'YES ✓' if done else 'NO ✗'}")
-            print(f"  Final Distance Object→Target: {dist_target:.4f} m")
+            print(f"  Final Distance Object→Target: {distTarget:.4f} m")
             
             total_rewards.append(ep_reward)
             
