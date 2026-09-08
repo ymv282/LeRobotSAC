@@ -7,7 +7,6 @@ replayBuffer.py, test.py und logger.py hartcodiert waren.
 
 import os
 import numpy as np
-import datetime
 
 # =====================================================================
 # Pfade
@@ -16,6 +15,9 @@ import datetime
 # so101_env.py: model_path Default
 <<<<<<< HEAD
 modelXmlPath = os.path.expanduser("/backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml")
+=======
+modelXmlPath = os.path.expanduser("~/LeRobot/SRC/SO-ARM100/Simulation/SO101/scene.xml")
+>>>>>>> 659e2e372664696d3bea5683b25cc745e3218773
 
 # so101_env.py: self.log_dir (Bilder/Frames)
 logDir = "/backup4users/feibusch/RoboArm/LeRobotSAC/SRC/logs"
@@ -141,7 +143,7 @@ actionDim = 6
 # Replay Buffer (replayBuffer.py)
 # =====================================================================
 
-replayBufferSize = 10_000
+replayBufferSize = 100_000
 
 
 # =====================================================================
@@ -185,3 +187,19 @@ testNumEpisodes = 5
 testMaxSteps = 200
 testStepSleepSeconds = 0.02
 testEpisodePauseSeconds = 3
+
+
+# =====================================================================
+# Rendering-Backend (headless-fähig)
+# =====================================================================
+
+# MUJOCO_GL: bestimmt, welchen OpenGL-Kontext mujoco.Renderer für Offscreen-
+# Rendering (Kamerabilder) verwendet. Ohne explizite Vorgabe fällt MuJoCo auf
+# GLFW zurück, das ein X11-Display braucht -> schlägt auf headless SSH-
+# Sessions fehl ("gladLoadGL error"). "osmesa" (CPU-Software-Rendering) als
+# Default, da auf gemeinsam genutzten HPC-/Cluster-Servern häufig zwar CUDA
+# für Compute, aber keine vollständige EGL-Vendor-Konfiguration für Headless-
+# GPU-Rendering vorhanden ist. Betrifft nur das 84x84-Kamerabild, nicht das
+# eigentliche Netzwerktraining (bleibt auf der GPU). "egl" als Alternative,
+# falls auf dem jeweiligen Server tatsächlich funktionsfähig konfiguriert.
+mujocoGlBackend = "osmesa"
