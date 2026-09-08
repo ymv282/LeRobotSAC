@@ -7,13 +7,14 @@ replayBuffer.py, test.py und logger.py hartcodiert waren.
 
 import os
 import numpy as np
+import datetime
 
 # =====================================================================
 # Pfade
 # =====================================================================
 
 # so101_env.py: model_path Default
-modelXmlPath = os.path.expanduser("~/LeRobot/SRC/SO-ARM100/Simulation/SO101/scene.xml")
+modelXmlPath = os.path.expanduser("D:\LeRobotSAC\SO-ARM100-main\Simulation\SO101\scene.xml")
 
 # so101_env.py: self.log_dir (Bilder/Frames)
 logDir = "/home/elia/LeRobot/SRC/logs"
@@ -25,7 +26,8 @@ gifPath = os.path.join(videoDir, "training.gif")
 
 # main.py: save_path für Modell-Checkpoints
 modelSaveDir = "models"
-bestModelFileName = "actor_critic_best.pth"
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+bestModelFileName = f"actor_critic_best_{timestamp}.pth"
 bestModelPath = os.path.join(modelSaveDir, bestModelFileName)
 
 # main.py: plt.savefig() — im Original ein Verzeichnis ohne Dateinamen/
@@ -139,7 +141,7 @@ actionDim = 6
 # Replay Buffer (replayBuffer.py)
 # =====================================================================
 
-replayBufferSize = 100_000
+replayBufferSize = 10_000
 
 
 # =====================================================================

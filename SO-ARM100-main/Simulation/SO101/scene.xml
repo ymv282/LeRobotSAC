@@ -38,5 +38,19 @@
             <geom name="targetGeom" type="cylinder" size="0.05 0.001" material="targetMat"
                 contype="0" conaffinity="0" group="1" />
         </body>
+
+        <!-- Unsichtbarer Referenzpunkt in der Mitte des vorderen Viertelkreises
+             (1. Quadrant), auf den die Kamera ausgerichtet wird. Kein Geom mit
+             Volumen -> keine Kollision, kein Rendering (size=0). -->
+        <body name="workspaceCenter" pos="0.2 0.2 0.05">
+            <geom name="workspaceCenterGeom" type="sphere" size="0.001" contype="0"
+                conaffinity="0" group="3" rgba="0 0 0 0" />
+        </body>
+
+        <!-- Seitliche RGB-Kamera: Position auf der -x-Seite, Blick entlang +x
+             auf den vorderen Viertelkreis (1. Quadrant), in dem Cube/Target
+             liegen. mode="targetbody" richtet die Kamera automatisch auf
+             workspaceCenter aus, unabhängig von Positionsänderungen des Cubes. -->
+        <camera name="rgb_camera" pos="-0.4 0.2 0.35" mode="targetbody" target="workspaceCenter" />
     </worldbody>
 </mujoco>
