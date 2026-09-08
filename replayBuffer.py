@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 from collections import deque
+import config
+
 class ReplayBuffer:
     """
     Replay Buffer, speichert 
@@ -12,7 +14,7 @@ class ReplayBuffer:
     Speichert historische Zustände, actions und r4ewards zum Training der Q Networks
 
     """
-    def __init__(self, device, size=100_000):
+    def __init__(self, device, size=config.replayBufferSize):
         self.buffer = deque(maxlen=size)
         self.size = size
         self.device = device

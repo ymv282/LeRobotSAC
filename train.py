@@ -4,16 +4,17 @@ import numpy as np
 from torch.optim import Adam
 from networks import ActorCritic
 from so101_env import SO101SimulationEnv
+import config
 
 
 # --------------------------------
 # Hyperparameter
 # --------------------------------
-gamma = 0.99
-tau = 0.005
+gamma = config.gamma
+tau = config.tau
 #alpha = 0.025
-lr = 3e-4
-batch_size = 64
+lr = config.learningRate
+batch_size = config.batchSize
 
 
 
@@ -37,6 +38,7 @@ def train_step(ac, ac_target, buffer, batch_size,
     z = ac.encoder(s)
     q1, q2 = ac.critic(z, a)
     critic_loss = F.mse_loss(q1, q_target) + F.mse_loss(q2, q_target)
+    #q1 hat shape ([64,1]), q_target hat shape([64,64,1])
     critic_optim.zero_grad()
     critic_loss.backward()
     critic_optim.step()

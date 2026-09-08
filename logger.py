@@ -1,6 +1,7 @@
 import sys
 import datetime
 import os
+import config
 
 class TeeLogger:
     """Leitet stdout gleichzeitig an Konsole und Datei weiter."""
@@ -16,7 +17,7 @@ class TeeLogger:
         self.terminal.flush()
         self.log.flush()
 
-def log_output(name="log.txt", folder="logs"):
+def log_output(name=config.logFileName, folder=config.logFolder):
     """Leitet stdout in eine logfile im Subfolder um (überschreibt existierende)."""
     os.makedirs(folder, exist_ok=True)
     log_filename = os.path.join(folder, name)

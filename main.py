@@ -25,17 +25,11 @@ from networks import ActorCritic
 from train import train_step
 from logger import log_output
 from replayBuffer import ReplayBuffer
-## physische daten zum gripper
-joint_limits = np.array([
-    [-1.9198621771937616,  1.9198621771937634],  # shoulder_pan
-    [-1.7453292519943224,  1.7453292519943366],  # shoulder_lift
-    [-1.69,                 1.69],               # elbow_flex
-    [-1.6580628494556928,  1.6580627293335335],  # wrist_flex
-    [-2.7438472969992493,  2.841206309382605],   # wrist_roll
-    [-0.17453297762778586, 1.7453291995659765],  # gripper
-])
-max_r = 0.36
-lr = 3e-4
+import config
+## physische daten zum gripper (zentral in config.py)
+joint_limits = config.jointLimits
+max_r = config.maxReachRadius
+lr = config.learningRate
 joint_min = joint_limits[:, 0]
 joint_max = joint_limits[:, 1]
 save_img = True
@@ -66,14 +60,14 @@ def SAC(
           f'Max Episoden: {NUM_EPISODES}|')
 
     env = SO101SimulationEnv(enable_viewer=ENABLE_VIEWER)
-    ac = ActorCritic(input_channels=3, action_dim=6).to(device)
-    ac_target = ActorCritic(input_channels=3, action_dim=6).to(device)
+    ac = ActorCritic(input_channels=config.inputChannels, action_dim=config.actionDim).to(device)
+    ac_target = ActorCritic(input_channels=config.inputChannels, action_dim=config.actionDim).to(device)
     ac_target.load_state_dict(ac.state_dict())
 
     buffer = ReplayBuffer(device=device)
     episode_rewards = []
     global_step = 0
-    save_path = "models"
+    save_path = config.modelSaveDir
     os.makedirs(save_path, exist_ok=True)
     best_avg = -np.inf 
     training = False
@@ -95,25 +89,25 @@ def SAC(
     # Scheduler
     if scheduler == "reduceOnPlateau":
         actor_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            actor_optim, mode='max', factor=0.5, patience=100, 
-            min_lr=1e-6
+            actor_optim, mode='max', factor=config.schedulerFactor, patience=config.schedulerPatience,
+            min_lr=config.schedulerMinLr
         )
         critic_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            critic_optim, mode='max', factor=0.5, patience=100, 
-            min_lr=1e-6
+            critic_optim, mode='max', factor=config.schedulerFactor, patience=config.schedulerPatience,
+            min_lr=config.schedulerMinLr
         )
     elif scheduler == "cosineAnnealing":
-        actor_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(actor_optim, NUM_EPISODES, eta_min=1e-6)
-        critic_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(critic_optim, NUM_EPISODES, eta_min=1e-6)
+        actor_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(actor_optim, NUM_EPISODES, eta_min=config.schedulerMinLr)
+        critic_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(critic_optim, NUM_EPISODES, eta_min=config.schedulerMinLr)
     elif scheduler == "stepLR":
-        actor_scheduler = torch.optim.lr_scheduler.StepLR(actor_optim, 6500, 0.1)
-        critic_scheduler = torch.optim.lr_scheduler.StepLR(critic_optim, 6500, 0.1)
+        actor_scheduler = torch.optim.lr_scheduler.StepLR(actor_optim, config.stepLrStepSize, config.stepLrGamma)
+        critic_scheduler = torch.optim.lr_scheduler.StepLR(critic_optim, config.stepLrStepSize, config.stepLrGamma)
     else:
         actor_scheduler = "Static"
         critic_scheduler = "Static"
-    action_dim = 6
+    action_dim = config.actionDim
     target_alpha = - action_dim
-    alpha_init = 0.1  # gewünschter Startwert
+    alpha_init = config.alphaInit  # gewünschter Startwert
     log_alpha = torch.tensor(
     [np.log(alpha_init)],
     requires_grad=True,
@@ -121,7 +115,7 @@ def SAC(
     )
     log_alpha = torch.zeros(1, requires_grad=True, device=device)
     alpha_optim = Adam([log_alpha], lr=lr)
-    success_fifo = deque(maxlen=50) 
+    success_fifo = deque(maxlen=config.successFifoMaxlen) 
 
 
     def success_rate(fifo):
@@ -129,12 +123,12 @@ def SAC(
     
 
     for ep in range(NUM_EPISODES):
-        r = 0.15#np.random.uniform(0.15, 0.36)
-        phi = np.random.uniform(0, np.pi/2)
+        r = np.random.uniform(config.cubeSpawnRadiusMin, config.cubeSpawnRadiusMax)
+        phi = np.random.uniform(config.cubeSpawnPhiMin, config.cubeSpawnPhiMax)
 
         x = r * np.cos(phi)
         y = r * np.sin(phi)
-        z_ = 0.025#np.random.uniform(0.02, 0.15)
+        z_ = config.cubeSpawnZ
         
 
         obs = env.reset(x=x, y=y, z=z_)  # Arm konstant, ziel konstant
@@ -165,8 +159,8 @@ def SAC(
             ep_reward += reward
             obs = next_obs_norm
 
-            if global_step > WARMUP_STEPS and global_step % 10 == 0: #fill replay buffer beofre starting actual training
-                if global_step % 100 == 0:
+            if global_step > WARMUP_STEPS and global_step % config.trainEveryNSteps == 0: #fill replay buffer beofre starting actual training
+                if global_step % config.alphaTrainEveryNSteps == 0:
                     train_alpha = True
                 else:
                     train_alpha = False
@@ -190,7 +184,8 @@ def SAC(
             if done:                    
                 success_fifo.append(1)
                 if not gif_created:
-                    make_gif(frames, os.path.expanduser('/home/elia/LeRobot/SRC/logs/videos'))
+                    os.makedirs(config.videoDir, exist_ok=True)
+                    make_gif(frames, config.gifPath)
                     gif_created = True
                 break
             else:
@@ -239,11 +234,11 @@ def SAC(
 
         if avg_reward > best_avg:
             best_avg = avg_reward
-            torch.save(ac.state_dict(), f"{save_path}/actor_critic_best.pth")
+            torch.save(ac.state_dict(), config.bestModelPath)
     env.close()
     return episode_rewards
 
-def make_gif(rgb_images, path, fps=10):
+def make_gif(rgb_images, path, fps=config.gifFps):
     try:
         from PIL import Image
         """
@@ -271,16 +266,16 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="SAC Training für SO101")
-    parser.add_argument("--episodes", type=int, default=20000)
-    parser.add_argument("--maxsteps", type=int, default=300)
-    parser.add_argument("--loginterval", type=int, default=100)
-    parser.add_argument("--warmup_steps", type=int, default=1000)
-    parser.add_argument("--batchsize", type=int, default=256)
-    parser.add_argument("--save_dir", type=str, default="logs")
+    parser.add_argument("--episodes", type=int, default=config.numEpisodes)
+    parser.add_argument("--maxsteps", type=int, default=config.maxSteps)
+    parser.add_argument("--loginterval", type=int, default=config.logInterval)
+    parser.add_argument("--warmup_steps", type=int, default=config.warmupSteps)
+    parser.add_argument("--batchsize", type=int, default=config.batchSize)
+    parser.add_argument("--save_dir", type=str, default=config.logFolder)
     parser.add_argument("--enable_viewer", action="store_true", default=False)
     parser.add_argument("--no_ml", action="store_true", default=False)
-    parser.add_argument("--scheduler", type=str, default="reduceOnPlateau",
-                         choices=["none", "reduceOnPlateau", "cosineAnnealing", "stepLR"])
+    parser.add_argument("--scheduler", type=str, default="none",
+                         choices=config.schedulerChoices)
     args = parser.parse_args()
 
     ep_rewards = SAC(
@@ -301,4 +296,4 @@ if __name__ == "__main__":
     plt.xlabel("Episodes")
     plt.ylabel("Episode Reward")
     plt.grid()
-    plt.savefig("/home/elia/LeRobot/SRC/logs")
+    plt.savefig(config.rewardPlotPath)

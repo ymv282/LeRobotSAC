@@ -5,14 +5,15 @@ import torch
 import time
 from so101_env import SO101SimulationEnv
 from networks import ActorCritic
+import config
 
 def test_trained_model(
-    model_path="models/actor_critic_best.pth",
-    num_episodes=5,
-    max_steps=200,
-    cube_x=0.2,
-    cube_y=0.0,
-    cube_z=0.025
+    model_path=config.testModelPath,
+    num_episodes=config.testNumEpisodes,
+    max_steps=config.testMaxSteps,
+    cube_x=config.defaultCubeX,
+    cube_y=config.defaultCubeY,
+    cube_z=config.defaultCubeZ
 ):
     """
     Testet ein trainiertes Modell im MuJoCo Viewer
@@ -32,15 +33,8 @@ def test_trained_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     
-    # Joint limits (für Action-Denormalisierung)
-    joint_limits = np.array([
-        [-1.9198621771937616,  1.9198621771937634],  # shoulder_pan
-        [-1.7453292519943224,  1.7453292519943366],  # shoulder_lift
-        [-1.69,                 1.69],               # elbow_flex
-        [-1.6580628494556928,  1.6580627293335335],  # wrist_flex
-        [-2.7438472969992493,  2.841206309382605],   # wrist_roll
-        [-0.17453297762778586, 1.7453291995659765],  # gripper
-    ])
+    # Joint limits (für Action-Denormalisierung, zentral in config.py)
+    joint_limits = config.jointLimits
     
     joint_min = joint_limits[:, 0]
     joint_max = joint_limits[:, 1]
@@ -61,7 +55,7 @@ def test_trained_model(
         return
     
     # Initialisiere Netzwerk
-    ac = ActorCritic(input_channels=3, action_dim=6).to(device)
+    ac = ActorCritic(input_channels=config.inputChannels, action_dim=config.actionDim).to(device)
     
     # Lade Weights
     try:
@@ -150,7 +144,7 @@ def test_trained_model(
                           f"Dist O→T: {distTarget:.3f}")
                 
                 # Langsamer für Beobachtung
-                time.sleep(0.02)
+                time.sleep(config.testStepSleepSeconds)
                 
                 if done:
                     print(f"\n✓ SUCCESS! Object reached target in {step} steps!")
@@ -169,7 +163,7 @@ def test_trained_model(
             # Kurze Pause zwischen Episodes
             if ep < num_episodes - 1:
                 print("\nNext episode in 3 seconds...")
-                time.sleep(3)
+                time.sleep(config.testEpisodePauseSeconds)
     
     except KeyboardInterrupt:
         print("\n\nTest interrupted by user (Ctrl+C)")
@@ -194,17 +188,17 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Test trained SAC model")
-    parser.add_argument("--model", type=str, default="models/actor_critic_best.pth",
+    parser.add_argument("--model", type=str, default=config.testModelPath,
                         help="Path to trained model (.pth file)")
-    parser.add_argument("--episodes", type=int, default=5,
+    parser.add_argument("--episodes", type=int, default=config.testNumEpisodes,
                         help="Number of test episodes")
-    parser.add_argument("--steps", type=int, default=200,
+    parser.add_argument("--steps", type=int, default=config.testMaxSteps,
                         help="Max steps per episode")
-    parser.add_argument("--cube_x", type=float, default=0.2,
+    parser.add_argument("--cube_x", type=float, default=config.defaultCubeX,
                         help="Cube X position")
-    parser.add_argument("--cube_y", type=float, default=0.0,
+    parser.add_argument("--cube_y", type=float, default=config.defaultCubeY,
                         help="Cube Y position")
-    parser.add_argument("--cube_z", type=float, default=0.025,
+    parser.add_argument("--cube_z", type=float, default=config.defaultCubeZ,
                         help="Cube Z position")
     
     args = parser.parse_args()

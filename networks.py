@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
 import numpy as np
+import config
 
 # -----------------------------
 # Shared CNN Encoder
@@ -11,7 +12,7 @@ class CNNEncoder(nn.Module):
     """
     Network to convert RGB image into latent code for further processing of actor and critic networks
     """
-    def __init__(self, input_channels=3, latent_dim=256):
+    def __init__(self, input_channels=config.inputChannels, latent_dim=config.latentDim):
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(input_channels, 32, 8, stride=4),
@@ -24,7 +25,7 @@ class CNNEncoder(nn.Module):
         )
         # Dummy forward to compute output size
         with torch.no_grad():
-            dummy = torch.zeros(1, input_channels, 84, 84)
+            dummy = torch.zeros(1, input_channels, *config.observationImgSize)
             self._flatten_size = self.conv(dummy).shape[1]
         self.fc = nn.Linear(self._flatten_size, latent_dim)
 
@@ -38,7 +39,7 @@ class CNNEncoder(nn.Module):
 # Actor Network
 # -----------------------------
 class Actor(nn.Module):
-    def __init__(self, latent_dim=256, action_dim=6):
+    def __init__(self, latent_dim=config.latentDim, action_dim=config.actionDim):
         super().__init__()
         self.fc_mu = nn.Linear(latent_dim, action_dim)
         self.fc_log_std = nn.Linear(latent_dim, action_dim)
@@ -78,7 +79,7 @@ class Actor(nn.Module):
 # Critic Network (Double Q)
 # -----------------------------
 class Critic(nn.Module):
-    def __init__(self, latent_dim=256, action_dim=6):
+    def __init__(self, latent_dim=config.latentDim, action_dim=config.actionDim):
         super().__init__()
         self.q1 = nn.Sequential(
             nn.Linear(latent_dim + action_dim, 256),
@@ -102,7 +103,7 @@ class Critic(nn.Module):
 # Full Actor-Critic with shared encoder
 # -----------------------------
 class ActorCritic(nn.Module):
-    def __init__(self, input_channels=3, action_dim=6, latent_dim=256):
+    def __init__(self, input_channels=config.inputChannels, action_dim=config.actionDim, latent_dim=config.latentDim):
         super().__init__()
         self.encoder = CNNEncoder(input_channels, latent_dim)
         self.actor = Actor(latent_dim, action_dim)

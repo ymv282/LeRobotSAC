@@ -3,21 +3,11 @@ import time
 import json
 from datetime import datetime
 from so101_env import SO101SimulationEnv
+import config
 
-# Physische Daten zum Gripper
-joint_limits = np.array([
-    [-1.9198621771937616,  1.9198621771937634],  # shoulder_pan
-    [-1.7453292519943224,  1.7453292519943366],  # shoulder_lift
-    [-1.69,                 1.69],               # elbow_flex
-    [-1.6580628494556928,  1.6580627293335335],  # wrist_flex
-    [-2.7438472969992493,  2.841206309382605],   # wrist_roll
-    [-0.17453297762778586, 1.7453291995659765],  # gripper
-])
-
-joint_names = [
-    "shoulder_pan", "shoulder_lift", "elbow_flex", 
-    "wrist_flex", "wrist_roll", "gripper"
-]
+# Physische Daten zum Gripper (zentral in config.py)
+joint_limits = config.jointLimits
+joint_names = config.jointNames
 
 class SessionLogger:
     def __init__(self):
@@ -203,9 +193,9 @@ def main():
     print("\n" + "="*80 + "\n")
     
     # Target-Position konfigurieren
-    x = float(input("Target X [default: 0.2]: ") or 0.2)
-    y = float(input("Target Y [default: 0.0]: ") or 0.0)
-    z = float(input("Target Z [default: 0.025]: ") or 0.025)
+    x = float(input(f"Target X [default: {config.defaultCubeX}]: ") or config.defaultCubeX)
+    y = float(input(f"Target Y [default: {config.defaultCubeY}]: ") or config.defaultCubeY)
+    z = float(input(f"Target Z [default: {config.defaultCubeZ}]: ") or config.defaultCubeZ)
     
     # Simulation-Rate
     fps = int(input("Simulation FPS [default: 30]: ") or 30)
@@ -232,7 +222,7 @@ def main():
             ])
             
             # Führe Step aus
-            obs, reward, done, dist_gripper, dist_target, _object_pos = env.step(current_angles)
+            obs, reward, done, dist_gripper, dist_target = env.step(current_angles)
             
             # Logge Step
             logger.log_step(step_count, current_angles, reward, dist_gripper, dist_target, done)

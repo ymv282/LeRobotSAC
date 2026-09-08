@@ -8,31 +8,25 @@ import threading
 import time
 from collections import deque
 import imageio
+import config
 #TODO: Kamera, next state, another 
 
 class SO101SimulationEnv:
     """Sim Environment für Mujoco"""
-    arm_joints = [
-            "shoulder_pan",
-            "shoulder_lift",
-            "elbow_flex",
-            "wrist_flex",
-            "wrist_roll",
-            "gripper",
-        ]
-    def __init__(self, model_path=os.path.expanduser("D:\LeRobotSAC\SO-ARM100-main\Simulation\SO101\scene.xml"), camera_name="rgbd_camera", 
-                 img_size=(84, 84), log_img_size=(512, 512), enable_viewer=False):
+    arm_joints = config.jointNames
+    def __init__(self, model_path=config.modelXmlPath, camera_name=config.cameraName,
+                 img_size=config.observationImgSize, log_img_size=config.logImgSize, enable_viewer=False):
         self.img_size = img_size
         self.camera_name = camera_name
         self.log_img_size = log_img_size
         self.enable_viewer = enable_viewer
         self.viewer = None
-        self.log_dir = '/home/elia/LeRobot/SRC/logs'
+        self.log_dir = config.logDir
 
         
         # Lade MuJoCo Modell
         if model_path is None:
-            model_path = os.path.expanduser("~/LeRobot/SRC/SO-ARM100/Simulation/SO101/scene.xml")
+            model_path = config.modelXmlPath
         
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"XML Datei nicht gefunden: {model_path}")
@@ -40,24 +34,19 @@ class SO101SimulationEnv:
         print(f"Lade MuJoCo Modell von: {model_path}")
         self.model = mujoco.MjModel.from_xml_path(model_path)
         self.data = mujoco.MjData(self.model)
-        self.renderer = mujoco.Renderer(self.model, height=480, width=640)
+        self.renderer = mujoco.Renderer(self.model, height=config.rendererHeight, width=config.rendererWidth)
         # MuJoCo Viewer starten (optional)
         if enable_viewer:
             self._start_viewer()
-        # mj_name2id wirft KEINE Exception bei fehlendem Namen, sondern gibt -1
-        # zurück. Das ursprüngliche try/except griff daher nie; self.camera_id
-        # wird jetzt immer gesetzt und explizit auf -1 geprüft.
-        self.camera_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_CAMERA, camera_name
-        )
-        if self.camera_id == -1:
-            print(f"Keine Kamera '{camera_name}' gefunden")
-        else:
+        try:
+            self.camera_id = mujoco.mj_name2id(
+                self.model, mujoco.mjtObj.mjOBJ_CAMERA, camera_name
+            )
             print(f"\nVerwende Kamera: '{camera_name}' (ID: {self.camera_id})")
+        except:
+            print("Keine Kamera gefunden")
     def get_camera_image(self):
         """Holt RGB Kamerabild"""
-        if self.camera_id == -1:
-            raise RuntimeError(f"Keine gültige Kamera '{self.camera_name}' im Modell gefunden")
         self.renderer.update_scene(self.data, camera=self.camera_id)
         rgb = self.renderer.render()
         rgb_small = cv2.resize(rgb, self.img_size)
@@ -65,22 +54,18 @@ class SO101SimulationEnv:
     
     def get_gif_img(self):
         "Img fürs rendern des Gifs"
-        if self.camera_id == -1:
-            raise RuntimeError(f"Keine gültige Kamera '{self.camera_name}' im Modell gefunden")
         self.renderer.update_scene(self.data, camera=self.camera_id)
         rgb = self.renderer.render()
         rgb_large = cv2.resize(rgb, self.log_img_size)
         return rgb_large
     def save_img(self):
         "Img fürs Rendern des Gifs und direkt im Log-Ordner speichern"
-        if self.camera_id == -1:
-            raise RuntimeError(f"Keine gültige Kamera '{self.camera_name}' im Modell gefunden")
         self.renderer.update_scene(self.data, camera=self.camera_id)
         rgb = self.renderer.render()
         rgb_large = cv2.resize(rgb, self.log_img_size)
 
         os.makedirs(self.log_dir, exist_ok=True)
-        filename = os.path.join(self.log_dir, "Testpic.png")
+        filename = config.debugImagePath#os.path.join(self.log_dir, f"frame_{self.step():06d}.png")
         cv2.imwrite(filename, cv2.cvtColor(rgb_large, cv2.COLOR_RGB2BGR))
 
         return rgb_large
@@ -88,18 +73,12 @@ class SO101SimulationEnv:
     def _start_viewer(self):
         """Startet MuJoCo Viewer in separatem Thread"""
         def viewer_loop():
-            # WICHTIG: Hier wird NICHT mehr mj_step() aufgerufen.
-            # step() und move_joints() stepen die Physik bereits im Hauptthread.
-            # Würde der Viewer-Thread parallel ebenfalls mj_step() aufrufen,
-            # griffen zwei Threads unsynchronisiert auf dasselbe data-Objekt zu
-            # (Race Condition / undefined behavior). Der Viewer-Thread übernimmt
-            # nur noch das Rendering/Sync mit fester Framerate.
             with mujoco.viewer.launch_passive(self.model, self.data) as viewer:
                 self.viewer = viewer
                 print("MuJoCo Viewer gestartet")
                 while viewer.is_running():
+                    mujoco.mj_step(self.model, self.data)
                     viewer.sync()
-                    time.sleep(1 / 60)
         
         self.viewer_thread = threading.Thread(target=viewer_loop, daemon=True)
         self.viewer_thread.start()
@@ -116,11 +95,7 @@ class SO101SimulationEnv:
         - Vorwärtskinematik aktualisieren
         - Kamera-Observation zurückgeben
         """
-        # In-place Reset statt self.data = mujoco.MjData(self.model):
-        # Ein bereits gestarteter Viewer (mujoco.viewer.launch_passive) ist an
-        # das konkrete data-Objekt gebunden. Würde hier ein neues MjData
-        # erzeugt, würde der Viewer weiterhin den alten Zustand anzeigen.
-        mujoco.mj_resetData(self.model, self.data)
+        self.data = mujoco.MjData(self.model)
 
         # ----- Arm-Joints randomisieren -----
         
@@ -154,13 +129,14 @@ class SO101SimulationEnv:
         )
         qadr = self.model.jnt_qposadr[cube_jid]
 
-        # erreichbarer Arbeitsraum TODO: Überprüfen
-        r = 0.45 #np.random.uniform(0.15, 0.45)
-        phi = np.random.uniform(-np.pi/2, np.pi/2)
+        # Vorderer sichtbarer Viertelkreis (1. Quadrant, x>=0, y>=0),
+        # innerhalb des Sichtfelds von rgb_camera
+        r = np.random.uniform(config.cubeSpawnRadiusAltMin, config.cubeSpawnRadiusAltMax)
+        phi = np.random.uniform(config.cubeSpawnPhiMinAlt, config.cubeSpawnPhiMaxAlt)
 
         x = r * np.cos(phi)
         y = r * np.sin(phi)
-        z = np.random.uniform(0.02, 0.15)
+        z = np.random.uniform(config.cubeSpawnZMinAlt, config.cubeSpawnZMaxAlt)
 
         # free joint: [x, y, z, qw, qx, qy, qz]
         self.data.qpos[qadr:qadr + 7] = np.array(
@@ -210,19 +186,19 @@ class SO101SimulationEnv:
         r_reach = -dist_gripper_object
         r_place = -dist_object_target
             # Adaptive Gewichtung basierend auf Phase
-        if dist_gripper_object > 0.08:
+        if dist_gripper_object > config.reachPhaseThreshold:
             # Phase 1: Hauptfokus auf Reaching
-            reward = 3.0 * r_reach + 0.5 * r_place
+            reward = config.reachWeightPhase1 * r_reach + config.placeWeightPhase1 * r_place
         else:
             # Phase 2: Hauptfokus auf Placing, aber Gripper-Kontakt behalten
-            reward = 0.5 * r_reach + 5.0 * r_place
+            reward = config.reachWeightPhase2 * r_reach + config.placeWeightPhase2 * r_place
             
             # Bonus für Kontakt halten
-            if dist_gripper_object < 0.12:
-                reward += 0.5
+            if dist_gripper_object < config.gripperContactThreshold:
+                reward += config.contactBonus
     
         # Kleine Zeit-Strafe
-        reward -= 0.02
+        reward -= config.timePenalty
         
         # # Phase 1: Gripper muss erst zum Object
         # if dist_gripper_object > 0.08:
@@ -233,9 +209,9 @@ class SO101SimulationEnv:
         # else:
         #     reward = -dist_object_target * 5.0
         # # reward = - dist_object_target
-        done = dist_object_target < 0.05
+        done = dist_object_target < config.successDistThreshold
         if done:
-            reward +=75.0  # Höherer Success-Bonus
+            reward += config.successBonus  # Höherer Success-Bonus
         
         return reward, done, dist_gripper_object, dist_object_target, object_pos
 
@@ -243,13 +219,13 @@ class SO101SimulationEnv:
 
     
     def move_joints(self,target_angles):
-        for _ in range(1000):
+        for _ in range(config.moveJointsRampSteps):
             self.data.ctrl[:] = target_angles
             mujoco.mj_step(self.model, self.data)
-            time.sleep(0.002)
-        for _ in range(500):
+            time.sleep(config.moveJointsSleepSeconds)
+        for _ in range(config.moveJointsSettleSteps):
             mujoco.mj_step(self.model, self.data)
-            time.sleep(0.002)
+            time.sleep(config.moveJointsSleepSeconds)
     def get_joint_positions(self, joint_names):
         positions = {}
 
@@ -274,7 +250,7 @@ class SO101SimulationEnv:
         """
         self.data.ctrl[:] = action
 
-        for _ in range(10):
+        for _ in range(config.mjStepsPerAction):
             mujoco.mj_step(self.model, self.data)
 
         # Observation: Kamerabild
