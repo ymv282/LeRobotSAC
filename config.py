@@ -14,6 +14,7 @@ import datetime
 # =====================================================================
 
 # so101_env.py: model_path Default
+<<<<<<< HEAD
 modelXmlPath = os.path.expanduser("/backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml")
 
 # so101_env.py: self.log_dir (Bilder/Frames)
@@ -26,8 +27,7 @@ gifPath = os.path.join(videoDir, "training.gif")
 
 # main.py: save_path für Modell-Checkpoints
 modelSaveDir = "models"
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-bestModelFileName = f"actor_critic_best_{timestamp}.pth"
+bestModelFileName = "actor_critic_best.pth"
 bestModelPath = os.path.join(modelSaveDir, bestModelFileName)
 
 # main.py: plt.savefig() — im Original ein Verzeichnis ohne Dateinamen/
