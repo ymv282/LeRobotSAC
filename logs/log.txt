@@ -18728,3 +18728,18 @@ Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main
 Training auf Device cuda
 Anzahl Episoden: 20000|Scheduler: reduceOnPlateau|Max Episoden: 20000|
 Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
+Training auf Device cuda
+Anzahl Episoden: 20000|Scheduler: reduceOnPlateau|Max Episoden: 20000|
+Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
+
+Verwende Kamera: 'rgb_camera' (ID: 0)
+Training auf Device cuda
+Anzahl Episoden: 20000|Scheduler: reduceOnPlateau|Max Episoden: 20000|
+Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
+
+Verwende Kamera: 'rgb_camera' (ID: 0)
+Training auf Device cuda
+Anzahl Episoden: 20000|Scheduler: none|Max Episoden: 20000|
+Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
+
+Verwende Kamera: 'rgb_camera' (ID: 0)

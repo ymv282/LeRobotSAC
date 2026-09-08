@@ -13,11 +13,7 @@ import numpy as np
 # =====================================================================
 
 # so101_env.py: model_path Default
-<<<<<<< HEAD
 modelXmlPath = os.path.expanduser("/backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml")
-=======
-modelXmlPath = os.path.expanduser("~/LeRobot/SRC/SO-ARM100/Simulation/SO101/scene.xml")
->>>>>>> 659e2e372664696d3bea5683b25cc745e3218773
 
 # so101_env.py: self.log_dir (Bilder/Frames)
 logDir = "/backup4users/feibusch/RoboArm/LeRobotSAC/SRC/logs"
