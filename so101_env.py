@@ -1,14 +1,21 @@
+import os
+import config
+
+# Muss vor "import mujoco" gesetzt werden, sonst versucht MuJoCo per Default
+# GLFW/X11 und schlägt headless mit "gladLoadGL error" fehl. setdefault, damit
+# eine bereits im Environment gesetzte MUJOCO_GL-Variable (z.B. manuell auf
+# "osmesa" gesetzt) nicht überschrieben wird.
+os.environ.setdefault("MUJOCO_GL", config.mujocoGlBackend)
+
 import numpy as np
 import mujoco
 import mujoco.viewer
 import cv2
-import os
 import matplotlib.pyplot as plt
 import threading
 import time
 from collections import deque
 import imageio
-import config
 #TODO: Kamera, next state, another 
 
 class SO101SimulationEnv:
