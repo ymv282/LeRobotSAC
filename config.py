@@ -14,10 +14,10 @@ import datetime
 # =====================================================================
 
 # so101_env.py: model_path Default
-modelXmlPath = os.path.expanduser("D:\LeRobotSAC\SO-ARM100-main\Simulation\SO101\scene.xml")
+modelXmlPath = os.path.expanduser("/backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml")
 
 # so101_env.py: self.log_dir (Bilder/Frames)
-logDir = "/home/elia/LeRobot/SRC/logs"
+logDir = "/backup4users/feibusch/RoboArm/LeRobotSAC/SRC/logs"
 
 # main.py: make_gif() Zielordner + konkrete Ausgabedatei (Original übergab
 # nur den Ordner ohne Dateinamen an Image.save() -> Exception)

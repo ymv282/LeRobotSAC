@@ -18719,3 +18719,12 @@ Lade MuJoCo Modell von: D:\LeRobotSAC\SO-ARM100-main\Simulation\SO101\scene.xml
 Verwende Kamera: 'rgb_camera' (ID: 0)
 [Episode 0] Reward: -398.81 | Avg(50): -398.81 | Distance Gripper to Object:  0.434 | Distance Object to Target: 0.286|Object Poistion: [0.036 0.26  0.02 ]
 Done: False|Current Alpha: 1.00|Success Rate: 0.0|
+Training auf Device cuda
+Anzahl Episoden: 20000|Scheduler: reduceOnPlateau|Max Episoden: 20000|
+Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
+Training auf Device cuda
+Anzahl Episoden: 20000|Scheduler: reduceOnPlateau|Max Episoden: 20000|
+Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
+Training auf Device cuda
+Anzahl Episoden: 20000|Scheduler: reduceOnPlateau|Max Episoden: 20000|
+Lade MuJoCo Modell von: /backup4users/feibusch/RoboArm/LeRobotSAC/SO-ARM100-main/Simulation/SO101/scene.xml
