@@ -126,15 +126,13 @@ def SAC(
     
 
     for ep in range(NUM_EPISODES):
-        r = np.random.uniform(config.cubeSpawnRadiusMin, config.cubeSpawnRadiusMax)
-        phi = np.random.uniform(config.cubeSpawnPhiMin, config.cubeSpawnPhiMax)
+        # Arm startet in reset() immer fix bei 0 (siehe so101_env.py).
+        # Box spawnt zufällig an einer von 3 fixen Positionen statt
+        # kontinuierlich im Viertelkreis.
+        spawnIdx = np.random.randint(len(config.cubeSpawnPositions))
+        x, y, z_ = config.cubeSpawnPositions[spawnIdx]
 
-        x = r * np.cos(phi)
-        y = r * np.sin(phi)
-        z_ = config.cubeSpawnZ
-        
-
-        obs = env.reset(x=x, y=y, z=z_)  # Arm konstant, ziel konstant
+        obs = env.reset(x=x, y=y, z=z_)  # Arm konstant, Box eine von 3 Positionen
         
         obs = obs.transpose(2, 0, 1) / 255.0 #formatieren, normalisieren
         done = False

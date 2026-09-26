@@ -136,14 +136,11 @@ class SO101SimulationEnv:
         )
         qadr = self.model.jnt_qposadr[cube_jid]
 
-        # Vorderer sichtbarer Viertelkreis (1. Quadrant, x>=0, y>=0),
-        # innerhalb des Sichtfelds von rgb_camera
-        r = np.random.uniform(config.cubeSpawnRadiusAltMin, config.cubeSpawnRadiusAltMax)
-        phi = np.random.uniform(config.cubeSpawnPhiMinAlt, config.cubeSpawnPhiMaxAlt)
-
-        x = r * np.cos(phi)
-        y = r * np.sin(phi)
-        z = np.random.uniform(config.cubeSpawnZMinAlt, config.cubeSpawnZMaxAlt)
+        # Konsistent zu main.py: eine von 3 fixen Positionen im vorderen
+        # Viertelkreis (1. Quadrant, x>=0, y>=0), statt kontinuierlichem
+        # Sampling.
+        spawnIdx = np.random.randint(len(config.cubeSpawnPositions))
+        x, y, z = config.cubeSpawnPositions[spawnIdx]
 
         # free joint: [x, y, z, qw, qx, qy, qz]
         self.data.qpos[qadr:qadr + 7] = np.array(

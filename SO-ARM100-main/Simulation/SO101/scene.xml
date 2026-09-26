@@ -47,10 +47,12 @@
                 conaffinity="0" group="3" rgba="0 0 0 0" />
         </body>
 
-        <!-- Seitliche RGB-Kamera: Position auf der -x-Seite, Blick entlang +x
-             auf den vorderen Viertelkreis (1. Quadrant), in dem Cube/Target
-             liegen. mode="targetbody" richtet die Kamera automatisch auf
-             workspaceCenter aus, unabhängig von Positionsänderungen des Cubes. -->
-        <camera name="rgb_camera" pos="-0.4 0.2 0.35" mode="targetbody" target="workspaceCenter" />
+        <!-- Seitliche RGB-Kamera: um 90° um workspaceCenter gedreht (vorher auf
+             der -x-Seite, also frontal/hinter dem Arm). Jetzt auf der -y-Seite,
+             Blick entlang +y quer über den vorderen Viertelkreis (1. Quadrant),
+             in dem Cube/Target liegen. mode="targetbody" richtet die Kamera
+             automatisch auf workspaceCenter aus, unabhängig von
+             Positionsänderungen des Cubes. -->
+        <camera name="rgb_camera" pos="0.2 -0.4 0.35" mode="targetbody" target="workspaceCenter" />
     </worldbody>
 </mujoco>

@@ -110,6 +110,17 @@ cubeSpawnPhiMin = 0.0
 cubeSpawnPhiMax = np.pi / 2
 cubeSpawnZ = 0.025
 
+# main.py: statt kontinuierlichem (r, phi)-Sampling wird die Cube-Position
+# pro Episode aus genau 3 fixen (x, y, z)-Positionen zufällig gewählt.
+# Liegen alle innerhalb der obigen Radius-/Phi-Grenzen (1. Quadrant), damit
+# sie im Bildausschnitt von rgb_camera bleiben. Armstart bleibt unverändert
+# konstant (so101_env.py reset() setzt alle Gelenkwinkel fix auf 0).
+cubeSpawnPositions = [
+    (0.1299, 0.0750, cubeSpawnZ),  # r=0.15, phi=30°
+    (0.1768, 0.1768, cubeSpawnZ),  # r=0.25, phi=45°
+    (0.1500, 0.2598, cubeSpawnZ),  # r=0.30, phi=60°
+]
+
 # so101_env.py move_cube(): identische Spawn-Logik wie oben (1. Quadrant,
 # randomisierter Radius). Vorher inkonsistent: Halbkreis (-pi/2..pi/2) statt
 # Viertelkreis, Radius hartcodiert statt randomisiert.
